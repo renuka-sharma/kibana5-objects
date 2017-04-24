@@ -1,0 +1,106 @@
+{
+  "template" : "logstash-*",
+  "settings" : {
+    "number_of_shards" : 4,
+    "number_of_replicas" : 1,
+    "index.refresh_interval" : "15s",
+    "index.query.default_field" : "@message",
+    "index.translog.flush_threshold_size": "1000mb",
+    "index.mapping.total_fields.limit" : "4000",
+    "analysis" : {
+      "analyzer" : {
+        "path_hierarchy" : {
+          "tokenizer" : "path_hierarchy"
+        },
+        "ipv4_path_hierarchy" : {
+          "tokenizer" : "ipv4_path_tokenizer"
+        },
+        "fqdn_path_hierarchy" : {
+          "tokenizer" : "fqdn_path_tokenizer"
+        }
+      },
+      "tokenizer" : {
+        "ipv4_path_tokenizer" : {
+          "type" : "path_hierarchy",
+          "delimiter" : "."
+        },
+        "fqdn_path_tokenizer" : {
+          "type" : "path_hierarchy",
+          "delimiter" : ".",
+          "reverse" : true
+        }
+      }
+    }
+  },
+ "mappings" : {
+       "_default_" : {
+      "dynamic_templates" : [{
+        "measurementfields" : {
+          "mapping" : {
+            "type" : "integer",
+            "doc_values" : true
+          },
+          "match_mapping_type" : "text",
+          "match" : "Measurement_*"
+        }
+      },{
+        "ruleappexecutiontimefields" : {
+          "mapping" : {
+            "type" : "float",
+            "doc_values" : true
+          },
+          "match_mapping_type" : "text",
+          "match" : "RuleAppET_*"
+        }
+      },{
+        "numberoffaresfields" : {
+          "mapping" : {
+            "type" : "integer",
+            "doc_values" : true
+          },
+          "match_mapping_type" : "text",
+          "match" : "NoOf*"
+        }
+      },{
+        "string_fields" : {
+          "mapping" : {
+            "index" : "true",
+            "norms" : false,
+            "type" : "keyword",
+            "doc_values" : true
+          },
+          "match_mapping_type" : "keyword",
+          "match" : "*",
+          "path_unmatch" : "dispatches_flat.*.*"
+        }
+      },
+      {
+        "dispatches_flat_match" : {
+          "path_match" : "dispatches_flat.*",
+          "mapping" : {
+            "type" : "object",
+            "dynamic" : true,
+            "properties" : {
+              "provider" : {
+                "type" : "keyword",
+                "norms" : false,
+                "doc_values" : true,
+                "index" : "true"
+              },
+              "results" : {
+                "type" : "integer",
+                "doc_values" : true
+              }
+            }
+          }
+        }
+      } ],
+      "_all" : {
+        "enabled" : false
+      }
+  }
+ },
+  "aliases": {
+    "active-logs": {}
+}
+}
